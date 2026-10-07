@@ -6,7 +6,8 @@ def calculate_fidelity(block: Dict[str, Any]) -> Dict[str, Any]:
     Evaluate the reliability of an extracted document block.
 
     FidelityGuard checks structural integrity, provenance,
-    extractor confidence, and visual-specific extraction issues.
+    extractor confidence, visual extraction issues,
+    and equation extraction issues.
     """
 
     score = 1.0
@@ -93,6 +94,23 @@ def calculate_fidelity(block: Dict[str, Any]) -> Dict[str, Any]:
         if "missing_figure_description" in visual_issues:
             score -= 0.20
 
+    # 7. Equation Intelligence validation
+    equation_issues = block.get("equation_issues", [])
+
+    if isinstance(equation_issues, list):
+        for equation_issue in equation_issues:
+            if equation_issue not in issues:
+                issues.append(equation_issue)
+
+        if "missing_equation_content" in equation_issues:
+            score -= 0.35
+
+        if "missing_latex" in equation_issues:
+            score -= 0.20
+
+        if "missing_equation_raw_text" in equation_issues:
+            score -= 0.15
+
     # Keep score between 0 and 1
     score = max(0.0, min(1.0, score))
 
@@ -123,6 +141,16 @@ def calculate_fidelity(block: Dict[str, Any]) -> Dict[str, Any]:
     }
 
     if visual_issue_types.intersection(issues) and risk == "low":
+        risk = "medium"
+
+    # Equation problems must never be silently accepted
+    equation_issue_types = {
+        "missing_equation_content",
+        "missing_latex",
+        "missing_equation_raw_text",
+    }
+
+    if equation_issue_types.intersection(issues) and risk == "low":
         risk = "medium"
 
     # Decide what the pipeline should do next
