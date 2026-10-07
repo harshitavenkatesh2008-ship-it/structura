@@ -8,7 +8,7 @@ All tests run from the repository root via: pytest
 import pytest
 from pydantic import ValidationError
 
-from app.models.document_graph import (
+from backend.app.models.document_graph import (
     Block,
     BlockType,
     BoundingBox,
