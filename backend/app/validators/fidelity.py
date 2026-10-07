@@ -5,8 +5,8 @@ def calculate_fidelity(block: Dict[str, Any]) -> Dict[str, Any]:
     """
     Evaluate the reliability of an extracted document block.
 
-    This is FidelityGuard v0.1.
-    It performs basic structural and provenance validation.
+    FidelityGuard checks structural integrity, provenance,
+    extractor confidence, and visual-specific extraction issues.
     """
 
     score = 1.0
@@ -73,6 +73,26 @@ def calculate_fidelity(block: Dict[str, Any]) -> Dict[str, Any]:
             score -= 0.25
             issues.append("invalid_extractor_confidence")
 
+    # 6. Visual Intelligence validation
+    visual_issues = block.get("visual_issues", [])
+
+    if isinstance(visual_issues, list):
+        for visual_issue in visual_issues:
+            if visual_issue not in issues:
+                issues.append(visual_issue)
+
+        if "missing_visual_content" in visual_issues:
+            score -= 0.35
+
+        if "missing_chart_title" in visual_issues:
+            score -= 0.10
+
+        if "missing_chart_description" in visual_issues:
+            score -= 0.20
+
+        if "missing_figure_description" in visual_issues:
+            score -= 0.20
+
     # Keep score between 0 and 1
     score = max(0.0, min(1.0, score))
 
@@ -93,6 +113,18 @@ def calculate_fidelity(block: Dict[str, Any]) -> Dict[str, Any]:
 
     if confidence_issues.intersection(issues) and risk == "low":
         risk = "medium"
+
+    # Visual problems must never be silently accepted
+    visual_issue_types = {
+        "missing_visual_content",
+        "missing_chart_title",
+        "missing_chart_description",
+        "missing_figure_description",
+    }
+
+    if visual_issue_types.intersection(issues) and risk == "low":
+        risk = "medium"
+
     # Decide what the pipeline should do next
     if risk == "low":
         action = "accept"
