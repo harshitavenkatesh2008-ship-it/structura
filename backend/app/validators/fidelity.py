@@ -50,6 +50,29 @@ def calculate_fidelity(block: Dict[str, Any]) -> Dict[str, Any]:
         score -= 0.20
         issues.append("unknown_block_type")
 
+    # 5. Extractor confidence check
+    extractor_confidence = block.get("confidence")
+
+    if extractor_confidence is not None:
+        try:
+            extractor_confidence = float(extractor_confidence)
+
+            if extractor_confidence < 0.0 or extractor_confidence > 1.0:
+                score -= 0.25
+                issues.append("invalid_extractor_confidence")
+
+            elif extractor_confidence < 0.50:
+                score -= 0.30
+                issues.append("very_low_extractor_confidence")
+
+            elif extractor_confidence < 0.75:
+                score -= 0.15
+                issues.append("low_extractor_confidence")
+
+        except (TypeError, ValueError):
+            score -= 0.25
+            issues.append("invalid_extractor_confidence")
+
     # Keep score between 0 and 1
     score = max(0.0, min(1.0, score))
 
@@ -60,10 +83,18 @@ def calculate_fidelity(block: Dict[str, Any]) -> Dict[str, Any]:
         risk = "medium"
     else:
         risk = "high"
+    # Decide what the pipeline should do next
+    if risk == "low":
+        action = "accept"
+    elif risk == "medium":
+        action = "review"
+    else:
+        action = "escalate"
 
     return {
         "fidelity_score": round(score, 2),
         "risk": risk,
+        "action": action,
         "flagged": risk == "high",
         "issues": issues,
     }
