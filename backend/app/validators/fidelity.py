@@ -83,6 +83,16 @@ def calculate_fidelity(block: Dict[str, Any]) -> Dict[str, Any]:
         risk = "medium"
     else:
         risk = "high"
+
+    # Confidence concerns must never be silently accepted
+    confidence_issues = {
+        "low_extractor_confidence",
+        "very_low_extractor_confidence",
+        "invalid_extractor_confidence",
+    }
+
+    if confidence_issues.intersection(issues) and risk == "low":
+        risk = "medium"
     # Decide what the pipeline should do next
     if risk == "low":
         action = "accept"
