@@ -1,3 +1,4 @@
+import math
 from typing import Any, Dict
 
 
@@ -5,9 +6,14 @@ def calculate_fidelity(block: Dict[str, Any]) -> Dict[str, Any]:
     """
     Evaluate the reliability of an extracted document block.
 
-    FidelityGuard checks structural integrity, provenance,
-    extractor confidence, visual extraction issues,
-    and equation extraction issues.
+    FidelityGuard checks:
+    - content integrity
+    - page provenance
+    - bounding-box provenance and geometry
+    - block type
+    - extractor confidence
+    - visual extraction issues
+    - equation extraction issues
     """
 
     score = 1.0
@@ -27,12 +33,41 @@ def calculate_fidelity(block: Dict[str, Any]) -> Dict[str, Any]:
         score -= 0.20
         issues.append("missing_page")
 
-    # 3. Bounding-box provenance check
+    elif isinstance(page, bool) or not isinstance(page, int) or page < 1:
+        score -= 0.20
+        issues.append("invalid_page")
+
+    # 3. Bounding-box provenance and geometry check
     bbox = block.get("bbox")
 
-    if not bbox or not isinstance(bbox, list) or len(bbox) != 4:
+    if not isinstance(bbox, list) or len(bbox) != 4:
         score -= 0.25
         issues.append("invalid_bbox")
+
+    else:
+        valid_coordinates = True
+
+        for coordinate in bbox:
+            if isinstance(coordinate, bool) or not isinstance(
+                coordinate, (int, float)
+            ):
+                valid_coordinates = False
+                break
+
+            if not math.isfinite(coordinate):
+                valid_coordinates = False
+                break
+
+        if not valid_coordinates:
+            score -= 0.25
+            issues.append("invalid_bbox_coordinates")
+
+        else:
+            x1, y1, x2, y2 = bbox
+
+            if x2 <= x1 or y2 <= y1:
+                score -= 0.25
+                issues.append("invalid_bbox_geometry")
 
     # 4. Block type check
     block_type = block.get("type")
@@ -56,9 +91,16 @@ def calculate_fidelity(block: Dict[str, Any]) -> Dict[str, Any]:
 
     if extractor_confidence is not None:
         try:
+            if isinstance(extractor_confidence, bool):
+                raise ValueError
+
             extractor_confidence = float(extractor_confidence)
 
-            if extractor_confidence < 0.0 or extractor_confidence > 1.0:
+            if not math.isfinite(extractor_confidence):
+                score -= 0.25
+                issues.append("invalid_extractor_confidence")
+
+            elif extractor_confidence < 0.0 or extractor_confidence > 1.0:
                 score -= 0.25
                 issues.append("invalid_extractor_confidence")
 
@@ -122,35 +164,25 @@ def calculate_fidelity(block: Dict[str, Any]) -> Dict[str, Any]:
     else:
         risk = "high"
 
-    # Confidence concerns must never be silently accepted
-    confidence_issues = {
+    # Issues that must never be silently accepted
+    review_required_issues = {
         "low_extractor_confidence",
         "very_low_extractor_confidence",
         "invalid_extractor_confidence",
-    }
-
-    if confidence_issues.intersection(issues) and risk == "low":
-        risk = "medium"
-
-    # Visual problems must never be silently accepted
-    visual_issue_types = {
+        "invalid_page",
+        "invalid_bbox",
+        "invalid_bbox_coordinates",
+        "invalid_bbox_geometry",
         "missing_visual_content",
         "missing_chart_title",
         "missing_chart_description",
         "missing_figure_description",
-    }
-
-    if visual_issue_types.intersection(issues) and risk == "low":
-        risk = "medium"
-
-    # Equation problems must never be silently accepted
-    equation_issue_types = {
         "missing_equation_content",
         "missing_latex",
         "missing_equation_raw_text",
     }
 
-    if equation_issue_types.intersection(issues) and risk == "low":
+    if review_required_issues.intersection(issues) and risk == "low":
         risk = "medium"
 
     # Decide what the pipeline should do next
