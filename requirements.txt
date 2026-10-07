@@ -3,3 +3,5 @@ uvicorn[standard]
 pydantic
 pydantic-settings
 python-multipart
+pymupdf>=1.28,<2
+httpx>=0.27,<1
