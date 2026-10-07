@@ -1,6 +1,5 @@
 """Automated tests for NativePDFExtractor using deterministic PDF fixtures."""
 
-import json
 from pathlib import Path
 import tempfile
 import unittest
@@ -54,15 +53,63 @@ class TestNativePDFExtractor(unittest.TestCase):
         doc = self.extractor.extract(SAMPLE_PDF_PATH)
 
         page1 = doc.pages[0]
-        self.assertEqual(len(page1.blocks), 2)
-        self.assertIn("Structura PDF Extractor Test", page1.blocks[0].content["text"])
-        self.assertIn(
-            "deterministic sample paragraph", page1.blocks[1].content["text"]
+        self.assertGreaterEqual(len(page1.blocks), 4)
+
+        # Check expected text contents across page 1 blocks
+        texts = [b.content.get("text", "") for b in page1.blocks]
+        self.assertTrue(
+            any("Structura PDF Extractor Test" in t for t in texts)
+        )
+        self.assertTrue(
+            any("deterministic sample paragraph" in t for t in texts)
         )
 
         page2 = doc.pages[1]
         self.assertEqual(len(page2.blocks), 1)
         self.assertIn("Page two content block", page2.blocks[0].content["text"])
+
+    def test_heading_classification(self) -> None:
+        """Verify that large/bold title text is classified as HEADING."""
+        doc = self.extractor.extract(SAMPLE_PDF_PATH)
+        page1 = doc.pages[0]
+
+        heading_blocks = [b for b in page1.blocks if b.type == BlockType.HEADING]
+        self.assertGreaterEqual(len(heading_blocks), 1)
+        self.assertIn("Structura PDF Extractor Test", heading_blocks[0].content["text"])
+
+    def test_paragraph_classification(self) -> None:
+        """Verify that standard body text is classified as PARAGRAPH."""
+        doc = self.extractor.extract(SAMPLE_PDF_PATH)
+        page1 = doc.pages[0]
+
+        paragraph_blocks = [b for b in page1.blocks if b.type == BlockType.PARAGRAPH]
+        self.assertGreaterEqual(len(paragraph_blocks), 1)
+        self.assertIn("deterministic sample paragraph", paragraph_blocks[0].content["text"])
+
+        # Page 2 content should also be PARAGRAPH
+        page2 = doc.pages[1]
+        self.assertEqual(page2.blocks[0].type, BlockType.PARAGRAPH)
+
+    def test_list_classification(self) -> None:
+        """Verify that bullet and numbered items are classified as LIST."""
+        doc = self.extractor.extract(SAMPLE_PDF_PATH)
+        page1 = doc.pages[0]
+
+        list_blocks = [b for b in page1.blocks if b.type == BlockType.LIST]
+        self.assertGreaterEqual(len(list_blocks), 2)
+        list_texts = [b.content["text"] for b in list_blocks]
+        self.assertTrue(any("First feature" in t for t in list_texts))
+        self.assertTrue(any("Second feature" in t for t in list_texts))
+
+    def test_image_classification(self) -> None:
+        """Verify that embedded raster images are detected and classified as IMAGE."""
+        doc = self.extractor.extract(SAMPLE_PDF_PATH)
+        page1 = doc.pages[0]
+
+        image_blocks = [b for b in page1.blocks if b.type == BlockType.IMAGE]
+        self.assertEqual(len(image_blocks), 1)
+        self.assertEqual(image_blocks[0].content.get("type"), "image")
+        self.assertEqual(image_blocks[0].page, 1)
 
     def test_block_page_numbers_and_metadata(self) -> None:
         """Verify block page numbers, reading order, and block IDs."""
@@ -71,20 +118,19 @@ class TestNativePDFExtractor(unittest.TestCase):
         # Page 1 blocks
         for block in doc.pages[0].blocks:
             self.assertEqual(block.page, 1)
-            self.assertEqual(block.type, BlockType.PARAGRAPH)
             self.assertEqual(block.risk.level, RiskLevel.LOW)
             self.assertTrue(block.traceable)
 
-        self.assertEqual(doc.pages[0].blocks[0].reading_order, 1)
-        self.assertEqual(doc.pages[0].blocks[1].reading_order, 2)
-        self.assertEqual(doc.pages[0].blocks[0].id, "block_001")
-        self.assertEqual(doc.pages[0].blocks[1].id, "block_002")
+        # Verify sequential reading order on page 1
+        for i, block in enumerate(doc.pages[0].blocks):
+            self.assertEqual(block.reading_order, i + 1)
+            self.assertEqual(block.id, f"block_{i + 1:03d}")
 
-        # Page 2 blocks
+        # Page 2 block
         page2_block = doc.pages[1].blocks[0]
         self.assertEqual(page2_block.page, 2)
         self.assertEqual(page2_block.reading_order, 1)
-        self.assertEqual(page2_block.id, "block_003")
+        self.assertEqual(page2_block.id, f"block_{len(doc.pages[0].blocks) + 1:03d}")
 
     def test_extractor_type_identifier(self) -> None:
         """Verify all extracted blocks use the standardized native_pdf extractor identifier."""
