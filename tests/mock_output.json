@@ -1,0 +1,66 @@
+{
+  "document_id": "doc_001",
+  "filename": "acquisition_report.pdf",
+  "format": "pdf",
+  "status": "completed",
+  "page_count": 31,
+
+  "pages": [
+    {
+      "page": 31,
+      "width": 612,
+      "height": 792,
+
+      "blocks": [
+        {
+          "id": "block_042",
+          "type": "table",
+          "page": 31,
+          "bbox": [0.13, 0.31, 0.87, 0.69],
+          "reading_order": 8,
+
+          "content": {
+            "headers": [
+              "Debt Instrument",
+              "Amount"
+            ],
+            "rows": [
+              ["Term Loan A", "$100M"],
+              ["Term Loan B", "$200M"],
+              ["Notes", "$125M"],
+              ["Total Debt", "$425M"]
+            ]
+          },
+
+          "extractor": "table_engine",
+
+          "risk": {
+            "score": 0.12,
+            "level": "low",
+            "signals": [
+              "numeric_consistency_pass"
+            ]
+          },
+
+          "confidence": null,
+
+          "flags": [],
+
+          "traceable": true,
+
+          "parent": null,
+          "children": []
+        }
+      ]
+    }
+  ],
+
+  "metrics": {
+    "processing_time_seconds": null,
+    "pages_per_second": null,
+    "provenance_coverage": null,
+    "escalated_regions_percent": null,
+    "estimated_cost_per_1000_pages": null,
+    "cost_per_correct_page": null
+  }
+}
