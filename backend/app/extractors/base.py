@@ -2,7 +2,8 @@
 
 Provides the foundational extractor interface and the NativePDFExtractor
 implementation for extracting structured Document Graph v1.0 objects from
-native digital PDF files with structural block type classification.
+native digital PDF files with structural block type classification and
+evidence-based extraction anomaly detection.
 """
 
 from abc import ABC, abstractmethod
@@ -70,8 +71,10 @@ class NativePDFExtractor(BaseExtractor):
     """Native digital PDF extractor for Structura.
 
     Extracts text and image blocks, calculates normalized spatial bounding boxes,
-    and applies typographic and syntactical heuristics to classify blocks into
-    HEADING, LIST, PARAGRAPH, and IMAGE types according to Document Graph v1.0.
+    applies typographic and syntactical heuristics to classify blocks into
+    HEADING, LIST, PARAGRAPH, and IMAGE types, and detects extraction-level
+    anomalies (font encoding issues, scanned/image-only pages) according to
+    Document Graph v1.0.
     """
 
     def __init__(self) -> None:
@@ -117,6 +120,20 @@ class NativePDFExtractor(BaseExtractor):
             return 11.0
         counts = Counter(sizes)
         return counts.most_common(1)[0][0]
+
+    @staticmethod
+    def _detect_encoding_anomalies(text: str) -> bool:
+        """Detect extraction corruption indicators such as U+FFFD or private-use glyphs.
+
+        Returns True if the text contains characters indicating unmapped font encodings.
+        """
+        if "\ufffd" in text:
+            return True
+        for ch in text:
+            # Check Unicode Private Use Area (E000-F8FF)
+            if 0xE000 <= ord(ch) <= 0xF8FF:
+                return True
+        return False
 
     @staticmethod
     def _classify_text_block(
@@ -168,7 +185,8 @@ class NativePDFExtractor(BaseExtractor):
                 document_id: Optional custom identifier for the document.
 
         Returns:
-            Document: Document Graph containing extracted pages and classified blocks.
+            Document: Document Graph containing extracted pages, classified blocks,
+                      and evidence-based risk signals and flags.
 
         Raises:
             FileNotFoundError: If the input file does not exist.
@@ -205,6 +223,23 @@ class NativePDFExtractor(BaseExtractor):
                     raw_blocks = page_dict.get("blocks", [])
                     page_blocks: list[Block] = []
                     reading_order = 1
+
+                    # Evaluate page-level content types
+                    has_text_content = False
+                    for raw in raw_blocks:
+                        if raw.get("type") == 0:
+                            for line in raw.get("lines", []):
+                                for span in line.get("spans", []):
+                                    if span.get("text", "").strip():
+                                        has_text_content = True
+                                        break
+                                if has_text_content:
+                                    break
+                        if has_text_content:
+                            break
+
+                    has_image_blocks = any(raw.get("type") == 1 for raw in raw_blocks)
+                    is_image_only_page = (not has_text_content) and has_image_blocks
 
                     for raw in raw_blocks:
                         block_type_code = raw.get("type", 0)
@@ -255,6 +290,16 @@ class NativePDFExtractor(BaseExtractor):
                                 line_count=len(line_texts),
                             )
 
+                            # Extraction anomaly detection
+                            signals: list[str] = []
+                            block_flags: list[str] = []
+                            risk_level = RiskLevel.LOW
+
+                            if self._detect_encoding_anomalies(full_text):
+                                signals.append("font_encoding_anomaly")
+                                block_flags.append("ENCODING_DEGRADATION")
+                                risk_level = RiskLevel.MEDIUM
+
                             block = Block(
                                 id=f"block_{block_counter:03d}",
                                 type=block_type,
@@ -265,11 +310,11 @@ class NativePDFExtractor(BaseExtractor):
                                 extractor=ExtractorType.NATIVE_PDF,
                                 risk=RiskInfo(
                                     score=0.0,
-                                    level=RiskLevel.LOW,
-                                    signals=[],
+                                    level=risk_level,
+                                    signals=signals,
                                 ),
                                 confidence=None,
-                                flags=[],
+                                flags=block_flags,
                                 traceable=True,
                                 parent=None,
                                 children=[],
@@ -282,6 +327,10 @@ class NativePDFExtractor(BaseExtractor):
                             block_counter += 1
                             x0, y0, x1, y1 = raw.get("bbox", (0, 0, 0, 0))[:4]
                             bbox = self._normalize_bbox(x0, y0, x1, y1, width, height)
+
+                            img_flags: list[str] = []
+                            if is_image_only_page:
+                                img_flags.append("SCANNED_CONTENT_DETECTED")
 
                             block = Block(
                                 id=f"block_{block_counter:03d}",
@@ -297,7 +346,7 @@ class NativePDFExtractor(BaseExtractor):
                                     signals=[],
                                 ),
                                 confidence=None,
-                                flags=[],
+                                flags=img_flags,
                                 traceable=True,
                                 parent=None,
                                 children=[],
