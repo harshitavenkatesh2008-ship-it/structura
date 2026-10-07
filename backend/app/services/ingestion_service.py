@@ -182,6 +182,18 @@ class IngestionService:
             self._discard(part_path)
             raise
 
+    def has_document(self, document_id: str) -> bool:
+        doc_id = (document_id or "").strip()
+        if not doc_id or "/" in doc_id or "\\" in doc_id or ".." in doc_id:
+            return False
+        if not self._root.exists():
+            return False
+        for ext in SUPPORTED_FORMATS:
+            candidate = self._root / f"{doc_id}.{ext}"
+            if candidate.is_file():
+                return True
+        return False
+
     def _write_chunk(self, handle: BinaryIO, chunk: bytes) -> None:
         handle.write(chunk)
 

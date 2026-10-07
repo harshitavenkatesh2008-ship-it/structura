@@ -32,6 +32,17 @@ DOCUMENT_UNAVAILABLE = "DOCUMENT_UNAVAILABLE"  # Document is missing or not retr
 # Internal
 INTERNAL_ERROR = "INTERNAL_ERROR"  # Unexpected server-side failure.
 
+# Checkpoint 10: Job errors
+JOB_NOT_FOUND = "JOB_NOT_FOUND"  # Referenced job does not exist.
+INVALID_JOB_STATE_TRANSITION = "INVALID_JOB_STATE_TRANSITION"  # State transition is not permitted.
+
+JOB_ERROR_CODES: frozenset[str] = frozenset(
+    {
+        JOB_NOT_FOUND,
+        INVALID_JOB_STATE_TRANSITION,
+    }
+)
+
 KNOWN_ERROR_CODES: frozenset[str] = frozenset(
     {
         INVALID_FILE,
