@@ -1,0 +1,194 @@
+{
+  "document_id": "doc_sample_001",
+  "filename": "sample_doc.pdf",
+  "format": "pdf",
+  "status": "completed",
+  "page_count": 3,
+  "pages": [
+    {
+      "page": 1,
+      "width": 612.0,
+      "height": 792.0,
+      "blocks": [
+        {
+          "id": "block_001",
+          "type": "heading",
+          "page": 1,
+          "bbox": [
+            0.1176,
+            0.0666,
+            0.5213,
+            0.0979
+          ],
+          "reading_order": 1,
+          "content": {
+            "text": "Structura PDF Extractor Test"
+          },
+          "extractor": "native_pdf",
+          "risk": {
+            "score": 0.0,
+            "level": "low",
+            "signals": []
+          },
+          "confidence": null,
+          "flags": [],
+          "traceable": true,
+          "parent": null,
+          "children": []
+        },
+        {
+          "id": "block_002",
+          "type": "paragraph",
+          "page": 1,
+          "bbox": [
+            0.1176,
+            0.1303,
+            0.706,
+            0.1494
+          ],
+          "reading_order": 2,
+          "content": {
+            "text": "This is a deterministic sample paragraph for testing native PDF extraction."
+          },
+          "extractor": "native_pdf",
+          "risk": {
+            "score": 0.0,
+            "level": "low",
+            "signals": []
+          },
+          "confidence": null,
+          "flags": [],
+          "traceable": true,
+          "parent": null,
+          "children": []
+        },
+        {
+          "id": "block_003",
+          "type": "list",
+          "page": 1,
+          "bbox": [
+            0.1176,
+            0.1745,
+            0.4503,
+            0.1935
+          ],
+          "reading_order": 3,
+          "content": {
+            "text": "- First feature: automated layout detection"
+          },
+          "extractor": "native_pdf",
+          "risk": {
+            "score": 0.0,
+            "level": "low",
+            "signals": []
+          },
+          "confidence": null,
+          "flags": [],
+          "traceable": true,
+          "parent": null,
+          "children": []
+        },
+        {
+          "id": "block_004",
+          "type": "list",
+          "page": 1,
+          "bbox": [
+            0.1176,
+            0.206,
+            0.5013,
+            0.2251
+          ],
+          "reading_order": 4,
+          "content": {
+            "text": "1. Second feature: multi-page document parsing"
+          },
+          "extractor": "native_pdf",
+          "risk": {
+            "score": 0.0,
+            "level": "low",
+            "signals": []
+          },
+          "confidence": null,
+          "flags": [],
+          "traceable": true,
+          "parent": null,
+          "children": []
+        },
+        {
+          "id": "block_005",
+          "type": "image",
+          "page": 1,
+          "bbox": [
+            0.1176,
+            0.2652,
+            0.2451,
+            0.3636
+          ],
+          "reading_order": 5,
+          "content": {
+            "text": "",
+            "type": "image"
+          },
+          "extractor": "native_pdf",
+          "risk": {
+            "score": 0.0,
+            "level": "low",
+            "signals": []
+          },
+          "confidence": null,
+          "flags": [],
+          "traceable": true,
+          "parent": null,
+          "children": []
+        }
+      ]
+    },
+    {
+      "page": 2,
+      "width": 612.0,
+      "height": 792.0,
+      "blocks": [
+        {
+          "id": "block_006",
+          "type": "paragraph",
+          "page": 2,
+          "bbox": [
+            0.1176,
+            0.076,
+            0.3085,
+            0.0951
+          ],
+          "reading_order": 1,
+          "content": {
+            "text": "Page two content block."
+          },
+          "extractor": "native_pdf",
+          "risk": {
+            "score": 0.0,
+            "level": "low",
+            "signals": []
+          },
+          "confidence": null,
+          "flags": [],
+          "traceable": true,
+          "parent": null,
+          "children": []
+        }
+      ]
+    },
+    {
+      "page": 3,
+      "width": 612.0,
+      "height": 792.0,
+      "blocks": []
+    }
+  ],
+  "metrics": {
+    "processing_time_seconds": 0.006,
+    "pages_per_second": 500.0,
+    "provenance_coverage": null,
+    "escalated_regions_percent": null,
+    "estimated_cost_per_1000_pages": null,
+    "cost_per_correct_page": null
+  }
+}
