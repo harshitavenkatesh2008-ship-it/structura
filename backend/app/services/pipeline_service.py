@@ -5,6 +5,7 @@ from pathlib import Path
 from typing import Any
 
 from backend.app.extractors.base import NativePDFExtractor
+from backend.app.extractors.registry import ExtractorRegistry, build_default_registry
 from backend.app.models.document_graph import Document
 from backend.app.services.document_adapter import to_document_graph
 from backend.app.services.fidelity import determine_escalation
@@ -15,9 +16,16 @@ from backend.app.validators.fidelity import calculate_fidelity
 class PipelineService:
     """Run native PDF extraction and evaluate each document block."""
 
-    def __init__(self, extractor: Any = None) -> None:
+    def __init__(
+        self,
+        extractor: Any = None,
+        registry: ExtractorRegistry | None = None,
+    ) -> None:
         self.extractor = (
             extractor if extractor is not None else NativePDFExtractor()
+        )
+        self.registry = (
+            registry if registry is not None else build_default_registry()
         )
 
     def process(self, file_path: str | Path) -> dict[str, Any]:
@@ -56,10 +64,14 @@ class PipelineService:
                     route.route != block.extractor
                 )
 
+                resolved = self.registry.resolve_status(
+                    route.route,
+                    block.extractor,
+                )
                 route_status = (
                     "unsupported"
-                    if requires_specialist
-                    else "already_satisfied"
+                    if resolved == "unsupported"
+                    else ("already_satisfied" if resolved == "already_satisfied" else resolved)
                 )
 
                 results.append(
