@@ -45,6 +45,7 @@ export interface Document {
   filename: string;
   format: string;
   status: "ready" | "processing";
+  pipeline_status?: string;
   page_count: number;
   pages: Page[];
   metrics: {

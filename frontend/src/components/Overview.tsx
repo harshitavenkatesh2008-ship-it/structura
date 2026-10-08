@@ -10,7 +10,7 @@ import {
   ScanLine,
 } from "lucide-react";
 import type { Document, View } from "../types/document";
-import { DEMO_DEBT_ID, reportTitle } from "../data/mockDocument";
+import { DEMO_DEBT_ID } from "../data/mockDocument";
 import { getBlocks } from "../utils/document";
 import { Badge, MockNotice, ReadyBadge } from "./UI";
 import { SourcePage } from "./DocumentViewer";
@@ -52,8 +52,16 @@ export function Overview({
   onTrace: (id: string) => void;
 }) {
   const blocks = getBlocks(document);
-  const debt = blocks.find((block) => block.id === DEMO_DEBT_ID)!;
-  const sourcePage = document.pages.find((page) => page.page === debt.page)!;
+  const debt =
+    (document.document_id === "doc_northstar_demo"
+      ? blocks.find((block) => block.id === DEMO_DEBT_ID)
+      : undefined) ??
+    blocks.find((block) => block.traceable) ??
+    blocks[0];
+
+  const sourcePage = debt
+    ? document.pages.find((page) => page.page === debt.page)
+    : undefined;
   const counts = (field: "type" | "risk" | "extractor") =>
     Object.entries(
       blocks.reduce<Record<string, number>>((result, block) => {
@@ -116,16 +124,23 @@ export function Overview({
         <div className="document-command-body">
           <button
             className="report-preview-stage"
-            onClick={() => onTrace(DEMO_DEBT_ID)}
-            aria-label="Trace the Total Debt source region"
+            disabled={!debt?.traceable || !sourcePage}
+            onClick={() => {
+              if (debt?.traceable && sourcePage) onTrace(debt.id);
+            }}
+            aria-label="Trace the selected document block to its source region"
           >
             <div className="preview-page-marker">
               <ScanLine size={13} />
-              <span>SOURCE PAGE {String(debt.page).padStart(2, "0")}</span>
+              <span>SOURCE PAGE {debt ? String(debt.page).padStart(2, "0") : "—"}</span>
               <span className="preview-live-dot" />
             </div>
             <div className="preview-paper-wrap">
-              <SourcePage page={sourcePage} selected={debt} showRegions />
+              {sourcePage && debt ? (
+                <SourcePage page={sourcePage} selected={debt} showRegions isDemo={document.document_id === "doc_northstar_demo"} />
+              ) : (
+                <span>No source preview available</span>
+              )}
             </div>
             <span className="preview-caption">
               <Crosshair size={12} /> Exact location. Not just a reference.
@@ -134,9 +149,13 @@ export function Overview({
           <div className="document-command-info">
             <div className="document-info-top">
               <span className="eyebrow">ACTIVE DOCUMENT</span>
-              <ReadyBadge />
+              {debt?.traceable && sourcePage ? (
+                <ReadyBadge />
+              ) : (
+                <Badge>TraceBack unavailable</Badge>
+              )}
             </div>
-            <h2>{reportTitle}</h2>
+            <h2>{document.filename}</h2>
             <p className="document-filename">
               <FileText size={12} />
               {document.filename}
@@ -144,7 +163,7 @@ export function Overview({
             <div className="document-tags">
               <span>{document.page_count} pages</span>
               <span>{blocks.length} blocks</span>
-              <span>Financial report</span>
+              <span>{document.format} document</span>
             </div>
             <div className="trace-hero">
               <div className="trace-hero-heading">
@@ -154,18 +173,18 @@ export function Overview({
                 </span>
                 <span className="source-verified">
                   <Check size={11} />
-                  Source verified
+                  {debt?.traceable && sourcePage ? "Source mapped" : "Mapping unavailable"}
                 </span>
               </div>
               <span className="eyebrow">EXTRACTED RESULT</span>
               <div className="debt-result">
-                <strong>{debt.content.split(" — ")[0]}</strong>
-                <strong>{debt.content.split(" — ")[1]}</strong>
+                <strong>{debt?.content.split(" — ")[0] ?? "No extracted block available"}</strong>
+                <strong>{debt?.content.split(" — ")[1] ?? ""}</strong>
               </div>
               <div className="trace-hero-meta">
-                <code>{debt.id}</code>
-                <span>Page {debt.page}</span>
-                <code>{debt.extractor}</code>
+                <code>{debt?.id ?? "—"}</code>
+                <span>Page {debt?.page ?? "—"}</span>
+                <code>{debt?.extractor ?? "—"}</code>
               </div>
               <div className="mini-provenance-chain">
                 <span>
@@ -189,7 +208,10 @@ export function Overview({
               </button>
               <button
                 className="button trace-action"
-                onClick={() => onTrace(DEMO_DEBT_ID)}
+                disabled={!debt?.traceable || !sourcePage}
+                onClick={() => {
+                  if (debt?.traceable && sourcePage) onTrace(debt.id);
+                }}
               >
                 Try TraceBack
                 <ArrowRight size={15} />
@@ -330,7 +352,7 @@ export function Overview({
           </ol>
         </section>
       </div>
-      <MockNotice />
+      {document.document_id === "doc_northstar_demo" && <MockNotice />}
     </div>
   );
 }

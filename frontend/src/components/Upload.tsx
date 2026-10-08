@@ -16,7 +16,7 @@ const supported = [
   "pptx",
   "ppt",
 ];
-export function Upload({ onStart }: { onStart: (filename: string) => void }) {
+export function Upload({ onStart }: { onStart: (file: File) => void }) {
   const input = useRef<HTMLInputElement>(null);
   const [file, setFile] = useState<File | null>(null);
   const [error, setError] = useState("");
@@ -113,19 +113,18 @@ export function Upload({ onStart }: { onStart: (filename: string) => void }) {
           </div>
         )}
         <div className="upload-explanation">
-          <strong>A safe place to explore the workflow.</strong>
+          <strong>Secure document processing.</strong>
           <p>
-            Your file stays on your device. This demo will open the fictional
-            Northstar report regardless of the selected file. Real parsing is
-            not connected.
+            Your document will be uploaded to the STRUCTURA processing pipeline
+            and converted into a traceable Document Graph.
           </p>
         </div>
         <div className="upload-actions">
-          <span>MOCK PROCESSING ONLY</span>
+          <span>LIVE PROCESSING</span>
           <button
             className="button primary"
             disabled={!file}
-            onClick={() => file && onStart(file.name)}
+            onClick={() => file && onStart(file)}
           >
             Start Parsing
             <ArrowRight size={16} />

@@ -31,10 +31,10 @@ export function Processing({
         eyebrow="WORKSPACE / PROCESSING"
         title={
           complete
-            ? "Your mock graph is ready"
+            ? "Your Document Graph is ready"
             : "Building a source-connected view"
         }
-        description="A simulated walkthrough of the document lifecycle. No extraction runs."
+        description="Processing your document through the STRUCTURA extraction pipeline."
       />
       <section className="panel processing-panel">
         <div className="processing-file">
@@ -74,9 +74,9 @@ export function Processing({
                 <strong>{stage}</strong>
                 <p>
                   {index < step
-                    ? "Simulated stage complete"
+                    ? "Stage complete"
                     : index === step
-                      ? "Showing mock stage"
+                      ? "Processing stage"
                       : "Waiting"}
                 </p>
               </div>
@@ -86,7 +86,7 @@ export function Processing({
         {complete && (
           <div className="processing-complete">
             <p>
-              Open the fictional Northstar report to inspect its blocks and
+              Your document is ready. Inspect its extracted blocks and
               source mappings.
             </p>
             <button className="button primary" onClick={onOpen}>

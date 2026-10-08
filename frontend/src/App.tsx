@@ -53,6 +53,7 @@ export default function App() {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [filename, setFilename] = useState("");
+  const [processingError, setProcessingError] = useState<string | null>(null);
   const [traceRequest, setTraceRequest] = useState(0);
   const handledTraceRequest = useRef(0);
   const sourceViewer = useRef<HTMLElement>(null);
@@ -99,11 +100,27 @@ export default function App() {
     }
     navigate("document");
   }
-  function startProcessing(name: string) {
-    setFilename(name);
+  async function startProcessing(file: File) {
+    setProcessingError(null);
+    setFilename(file.name);
     setSelectedId(null);
     setPage(1);
     navigate("processing");
+
+    try {
+      const processedDocument = await documentService.processDocument(file);
+      setDocument(processedDocument);
+      navigate("document");
+    } catch (error) {
+      console.error("STRUCTURA document processing failed:", error);
+      setProcessingError(
+        error instanceof Error
+          ? error.message
+          : "Document processing failed. Please try again."
+      );
+      setFilename("");
+      navigate("upload");
+    }
   }
   const isWorkspace = view === "document" || view === "structured";
 
@@ -120,7 +137,9 @@ export default function App() {
           <div className="header-right">
             <span className="header-demo">
               <span className="small-status" />
-              Mock data
+              {document.document_id === "doc_northstar_demo"
+                ? "Mock data"
+                : "Live document"}
             </span>
             <span className="header-separator" />
             <div className="profile-avatar" title="Frontend demo">
@@ -135,6 +154,18 @@ export default function App() {
               navigate={navigate}
               onTrace={traceDemo}
             />
+          )}
+          {view === "upload" && processingError && (
+            <div role="alert" className="processing-error" style={{
+              margin: "16px 24px",
+              padding: "16px",
+              border: "1px solid #d97777",
+              borderRadius: "10px"
+            }}>
+              <strong>Document processing failed</strong>
+              <p>{processingError}</p>
+              <p>Please select your document again to retry.</p>
+            </div>
           )}
           {(view === "upload" || (view === "processing" && !filename)) && (
             <Upload onStart={startProcessing} />
@@ -151,17 +182,36 @@ export default function App() {
               <div className="workspace-title">
                 <div>
                   <div className="eyebrow">WORKSPACE / DOCUMENT INSPECTION</div>
-                  <h1>{reportTitle}</h1>
+                  <h1>
+                    {document.document_id === "doc_northstar_demo"
+                      ? reportTitle
+                      : document.filename}
+                  </h1>
                   <p>
                     <FileText size={13} />
                     {document.filename}
                     <span>·</span>
                     {document.page_count} pages<span>·</span>
                     {document.metrics.block_count} blocks
-                    <Badge>MOCK DOCUMENT</Badge>
+                    <Badge>
+                      {document.document_id === "doc_northstar_demo"
+                        ? "MOCK DOCUMENT"
+                        : "UPLOADED DOCUMENT"}
+                    </Badge>
+                    {document.pipeline_status === "review" && (
+                      <Badge>REVIEW REQUIRED</Badge>
+                    )}
                   </p>
                 </div>
-                <ReadyBadge />
+                {getBlocks(document).some(
+                  (block) =>
+                    block.traceable &&
+                    document.pages.some((page) => page.page === block.page)
+                ) ? (
+                  <ReadyBadge />
+                ) : (
+                  <Badge>TraceBack unavailable</Badge>
+                )}
               </div>
               <div className="workspace-navigation">
                 <div className="workspace-tabs">

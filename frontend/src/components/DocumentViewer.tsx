@@ -12,7 +12,7 @@ import type { Ref } from "react";
 import type { Block, Document, Page } from "../types/document";
 import { reportTitle } from "../data/mockDocument";
 
-function SourceContent({ block }: { block: Block }) {
+function SourceContent({ block, isDemo = false }: { block: Block; isDemo?: boolean }) {
   if (block.table)
     return (
       <div className="source-table">
@@ -41,7 +41,7 @@ function SourceContent({ block }: { block: Block }) {
         ))}
       </ul>
     );
-  if (block.type === "figure")
+  if (isDemo && block.type === "figure")
     return (
       <div className="source-figure">
         <span>
@@ -58,7 +58,7 @@ function SourceContent({ block }: { block: Block }) {
         <small>ILLUSTRATIVE TRANSACTION STRUCTURE</small>
       </div>
     );
-  if (block.type === "chart")
+  if (isDemo && block.type === "chart")
     return (
       <div className="source-chart">
         <small>ILLUSTRATIVE DEBT MIX · USD MILLIONS</small>
@@ -75,7 +75,7 @@ function SourceContent({ block }: { block: Block }) {
         ))}
       </div>
     );
-  if (block.type === "image")
+  if (isDemo && block.type === "image")
     return (
       <div className="source-stamp">
         COPY
@@ -107,11 +107,13 @@ export function SourcePage({
   page,
   selected,
   showRegions = false,
+  isDemo = false,
   onSelect,
 }: {
   page: Page;
   selected: Block | null;
   showRegions?: boolean;
+  isDemo?: boolean;
   onSelect?: (block: Block) => void;
 }) {
   const showOverlay = selected?.traceable && selected.page === page.page;
@@ -122,8 +124,8 @@ export function SourcePage({
       data-testid="document-paper"
     >
       <div className="paper-header">
-        <span>NORTHSTAR</span>
-        <span>TRANSACTION REPORT / DEMO</span>
+        <span>STRUCTURA</span>
+        <span>DOCUMENT GRAPH PREVIEW</span>
       </div>
       {page.blocks
         .filter((block) => !block.parent)
@@ -154,7 +156,7 @@ export function SourcePage({
                 : undefined
             }
           >
-            <SourceContent block={block} />
+            <SourceContent block={block} isDemo={isDemo} />
           </div>
         ))}
       {showOverlay && (
@@ -175,7 +177,7 @@ export function SourcePage({
         </div>
       )}
       <div className="paper-footer">
-        <span>{reportTitle} · Fictional demonstration</span>
+        <span>STRUCTURA · Reconstructed document preview</span>
         <span>{String(page.page).padStart(2, "0")}</span>
       </div>
     </div>
@@ -215,7 +217,7 @@ export function DocumentViewer({
           <FileText size={16} />
           <strong>Source document</strong>
         </div>
-        <span>MOCK PDF</span>
+        <span>DOCUMENT GRAPH VIEW</span>
       </div>
       <div className="viewer-toolbar">
         <div className="page-controls">
@@ -275,6 +277,7 @@ export function DocumentViewer({
             page={page}
             selected={selected}
             showRegions={showRegions}
+            isDemo={document.document_id === "doc_northstar_demo"}
             onSelect={onSelect}
           />
         </div>
