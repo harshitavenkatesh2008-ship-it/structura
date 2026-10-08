@@ -32,7 +32,7 @@ def validate_bounding_box(bbox: Sequence[Union[int, float]]) -> List[float]:
     - Must contain exactly 4 values: [x0, y0, x1, y1].
     - Every coordinate must be between 0.0 and 1.0.
     - Top-left coordinate convention: x0 <= x1 and y0 <= y1.
-    
+
     Raises:
         ValueError: If any validation rule is violated.
     Returns:
@@ -124,7 +124,7 @@ def stitch_two_tables(
 ) -> Dict[str, Any]:
     """
     Stitch two compatible table blocks into a single Document Graph table block.
-    
+
     Rules:
     - Preserves table1's identity, page, bbox, and reading_order as the anchor.
     - Combines rows in sequential reading order.
@@ -214,7 +214,7 @@ def stitch_tables(
     """
     Accepts table blocks from consecutive pages and stitches compatible
     continuation tables in document reading order.
-    
+
     Incompatible tables are kept separate and unmodified.
     """
     if not tables:
