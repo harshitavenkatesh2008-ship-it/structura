@@ -32,6 +32,17 @@ DOCUMENT_UNAVAILABLE = "DOCUMENT_UNAVAILABLE"  # Document is missing or not retr
 # Internal
 INTERNAL_ERROR = "INTERNAL_ERROR"  # Unexpected server-side failure.
 
+# Checkpoint 10: Job errors
+JOB_NOT_FOUND = "JOB_NOT_FOUND"  # Referenced job does not exist.
+INVALID_JOB_STATE_TRANSITION = "INVALID_JOB_STATE_TRANSITION"  # State transition is not permitted.
+
+JOB_ERROR_CODES: frozenset[str] = frozenset(
+    {
+        JOB_NOT_FOUND,
+        INVALID_JOB_STATE_TRANSITION,
+    }
+)
+
 KNOWN_ERROR_CODES: frozenset[str] = frozenset(
     {
         INVALID_FILE,
@@ -49,5 +60,18 @@ KNOWN_ERROR_CODES: frozenset[str] = frozenset(
         REQUEST_VALIDATION_FAILED,
         DOCUMENT_NOT_READY,
         DOCUMENT_UNAVAILABLE,
+    }
+)
+
+# Checkpoint 14: Persistence & failure recovery errors
+PERSISTENCE_UNAVAILABLE = "PERSISTENCE_UNAVAILABLE"  # Supabase / database service is unreachable
+PERSISTENCE_ERROR = "PERSISTENCE_ERROR"  # Database query or storage operation failed
+JOB_RECOVERY_FAILED = "JOB_RECOVERY_FAILED"  # Recovery of an interrupted job could not be completed
+
+PERSISTENCE_ERROR_CODES: frozenset[str] = frozenset(
+    {
+        PERSISTENCE_UNAVAILABLE,
+        PERSISTENCE_ERROR,
+        JOB_RECOVERY_FAILED,
     }
 )
