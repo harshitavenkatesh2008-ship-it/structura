@@ -1,0 +1,210 @@
+.document-stage {
+  background: #eeefe8;
+  padding: 25px 26px 30px;
+  overflow: auto;
+}
+.paper-wrap {
+  max-width: 660px;
+  margin: 0 auto;
+  min-width: 0;
+}
+.document-paper {
+  position: relative;
+  background: #fffefa;
+  border: 1px solid #e1e2d8;
+  box-shadow: 0 3px 7px #45513013;
+  width: 100%;
+  container-type: inline-size;
+  color: #333b30;
+  font-family: Georgia, "Times New Roman", serif;
+}
+.paper-header {
+  position: absolute;
+  top: 6%;
+  left: 10%;
+  right: 10%;
+  display: flex;
+  justify-content: space-between;
+  border-bottom: 1px solid #c7cabb;
+  padding-bottom: 2.8%;
+  font-family: "Geist Variable", sans-serif;
+  font-size: 1.2cqw;
+  letter-spacing: 0.17cqw;
+  color: #899078;
+}
+.paper-header > span:first-child {
+  font-size: 1.8cqw;
+  letter-spacing: 0.27cqw;
+  font-weight: 650;
+  color: #606d52;
+}
+.source-block {
+  position: absolute;
+  font-size: 1.85cqw;
+  line-height: 1.65;
+  overflow: hidden;
+}
+.source-heading {
+  font-size: 4.4cqw;
+  letter-spacing: -0.1cqw;
+  line-height: 1.22;
+  font-weight: 600;
+  overflow: visible;
+}
+.source-subtitle {
+  font-size: 2.9cqw;
+  line-height: 1.5;
+  color: #909780;
+  font-weight: 400;
+  letter-spacing: -0.05cqw;
+}
+.source-heading.section-heading {
+  font-size: 2.25cqw;
+  color: #657254;
+  letter-spacing: 0;
+  line-height: 1.5;
+  border-bottom: 1px solid #d9decb;
+}
+.source-list ul {
+  padding-left: 2.8cqw;
+  margin: 0;
+  line-height: 2.2;
+}
+.source-list li {
+  padding-left: 0.5cqw;
+}
+.source-table {
+  height: 100%;
+  border-top: 1px solid #899573;
+  border-bottom: 1px solid #899573;
+  font-family: "Geist Variable", sans-serif;
+  font-size: 1.85cqw;
+}
+.source-table-row {
+  height: 20%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2.7%;
+  border-bottom: 1px solid #e2e5d8;
+}
+.source-table-head {
+  background: #eef1e5;
+  color: #667653;
+  font-size: 1.5cqw;
+  font-weight: 550;
+}
+.source-table-row.total-row {
+  font-weight: 650;
+  background: #f4f5ec;
+  border: 0;
+}
+.source-table-row > span:last-child {
+  font-variant-numeric: tabular-nums;
+}
+.source-equation {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 1.75cqw;
+  background: #f5f6ee;
+  border: 1px solid #e6e9da;
+}
+.source-figure {
+  border: 1px solid #e3e7d5;
+  background: #fafbf5;
+}
+.source-figure > div {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4cqw;
+  font-family: "Geist Variable", sans-serif;
+  font-size: 1.7cqw;
+  text-align: center;
+  padding-bottom: 2cqw;
+}
+.source-figure strong {
+  font-weight: 550;
+}
+.source-figure small {
+  position: absolute;
+  bottom: 7%;
+  font-size: 0.85cqw;
+  letter-spacing: 0.15cqw;
+  color: #98a184;
+}
+.figure-arrow {
+  color: #9ba987;
+  font-size: 4cqw;
+}
+.source-chart {
+  border: 1px solid #e4e8d6;
+  background: #f9faf3;
+  padding: 2cqw;
+}
+.source-chart > div {
+  height: 100%;
+  font-family: "Geist Variable", sans-serif;
+}
+.source-chart small {
+  font-size: 1.15cqw;
+  display: block;
+  margin-bottom: 1.8cqw;
+  color: #8d9778;
+}
+.source-chart > div > div {
+  display: flex;
+  gap: 2cqw;
+  align-items: center;
+  font-size: 1.5cqw;
+  height: 24%;
+}
+.source-chart > div > div > span {
+  width: 19%;
+  white-space: nowrap;
+}
+.source-chart i {
+  height: 1.65cqw;
+  background: #b8c3a1;
+  display: block;
+}
+.source-chart b {
+  font-size: 1.5cqw;
+  font-weight: 500;
+  color: #6a7854;
+}
+.source-stamp {
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  border: 2px dashed #c8bca8;
+  background: #f8f2e7;
+  color: #bca98c;
+  font-size: 3.5cqw;
+  letter-spacing: 1cqw;
+  font-family: var(--mono);
+  transform: rotate(-4deg);
+  margin: 1cqw 2cqw;
+}
+.source-stamp small {
+  font-size: 0.9cqw;
+  letter-spacing: 0.15cqw;
+}
+.paper-footer {
+  position: absolute;
+  left: 10%;
+  right: 10%;
+  bottom: 3.5%;
+  border-top: 1px solid #dde1d1;
+  display: flex;
+  justify-content: space-between;
+  padding-top: 1.6%;
+  font-family: "Geist Variable", sans-serif;
+  font-size: 1.05cqw;
+  color: #a1aa90;
+}
