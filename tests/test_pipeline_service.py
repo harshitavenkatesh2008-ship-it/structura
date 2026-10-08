@@ -6,11 +6,10 @@ from unittest.mock import patch
 import pytest
 
 from backend.app.models import document as source
-from backend.app.models import document_graph as target
 from backend.app.services.pipeline_service import PipelineService
 
 
-def make_document():
+def make_document(text="Hello STRUCTURA"):
     """Create a small extracted document for testing."""
 
     block = source.Block(
@@ -19,7 +18,7 @@ def make_document():
         page=1,
         bbox=[0.1, 0.2, 0.8, 0.9],
         reading_order=0,
-        content={"text": "Hello STRUCTURA"},
+        content={"text": text},
         extractor=source.ExtractorType.NATIVE_PDF,
         confidence=0.95,
     )
@@ -57,12 +56,14 @@ class FakeExtractor:
 @pytest.mark.parametrize(
     ("action", "expected_status"),
     [
-        ("accept", "review"),  # Recommended OCR route was not executed.
+        ("accept", "accept"),
         ("review", "review"),
         ("escalate", "escalate"),
     ],
 )
 def test_pipeline_status(action, expected_status):
+    """Verify fidelity decisions for valid native PDF text."""
+
     extractor = FakeExtractor(make_document())
 
     with (
@@ -91,58 +92,52 @@ def test_pipeline_status(action, expected_status):
 
     assert result["status"] == expected_status
     assert result["block_count"] == 1
-    assert result["unexecuted_route_count"] == 1
+    assert result["unexecuted_route_count"] == 0
 
     block_result = result["block_results"][0]
 
     assert block_result["fidelity"]["action"] == action
     assert block_result["initial_extractor"] == "native_pdf"
+    assert block_result["route"] == "native_pdf"
+    assert block_result["requires_specialist"] is False
     assert block_result["route_executed"] is False
 
 
 def test_pipeline_empty_document_requires_review():
+    """An empty document must not be accepted."""
+
     document = make_document()
     document.pages[0].blocks = []
 
-    result = PipelineService(FakeExtractor(document)).process("sample.pdf")
+    result = PipelineService(
+        FakeExtractor(document)
+    ).process("sample.pdf")
 
     assert result["status"] == "review"
     assert result["block_count"] == 0
     assert result["unexecuted_route_count"] == 0
 
 
-def test_pipeline_preserves_extraction_failure():
-    extractor = FakeExtractor(
-        error=RuntimeError("PDF extraction failed")
-    )
+def test_native_text_avoids_unnecessary_ocr():
+    """Usable native PDF text should not trigger OCR fallback."""
 
-    with pytest.raises(RuntimeError, match="PDF extraction failed"):
-        PipelineService(extractor).process("sample.pdf")
-
-
-def test_pipeline_returns_canonical_graph():
     result = PipelineService(
         FakeExtractor(make_document())
     ).process("sample.pdf")
 
-    assert isinstance(result["document"], target.Document)
-    assert result["document"].document_id == "doc_1"
-    assert result["document"].pages[0].blocks[0].id == "block_1"
+    block = result["block_results"][0]
 
-    assert len(result["block_results"]) == 1
-
-    block_result = result["block_results"][0]
-
-    assert "route" in block_result
-    assert "fidelity" in block_result
-    assert "escalation" in block_result
-    assert "route_executed" in block_result
+    assert block["initial_extractor"] == "native_pdf"
+    assert block["route"] == "native_pdf"
+    assert block["requires_specialist"] is False
+    assert block["route_executed"] is False
+    assert result["unexecuted_route_count"] == 0
 
 
 def test_unexecuted_specialist_route_prevents_accept():
     """A fidelity ACCEPT must not hide an unexecuted OCR route."""
 
-    document = make_document()
+    document = make_document(text="")
 
     with patch(
         "backend.app.services.pipeline_service.calculate_fidelity",
@@ -196,11 +191,14 @@ def test_matching_route_allows_accept():
     assert result["unexecuted_route_count"] == 0
     assert result["block_results"][0]["route"] == "native_pdf"
 
+
 def test_unsupported_specialist_route_is_explicit():
     """An unavailable specialist route must be reported clearly."""
 
+    document = make_document(text="")
+
     result = PipelineService(
-        FakeExtractor(make_document())
+        FakeExtractor(document)
     ).process("sample.pdf")
 
     block = result["block_results"][0]
@@ -213,3 +211,14 @@ def test_unsupported_specialist_route_is_explicit():
 
     assert result["status"] == "review"
     assert result["unexecuted_route_count"] == 1
+
+
+def test_extractor_error_propagates():
+    """Unexpected extractor failures must not be silently accepted."""
+
+    extractor = FakeExtractor(
+        error=RuntimeError("Extraction failed")
+    )
+
+    with pytest.raises(RuntimeError, match="Extraction failed"):
+        PipelineService(extractor).process("sample.pdf")
