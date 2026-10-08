@@ -62,3 +62,17 @@ KNOWN_ERROR_CODES: frozenset[str] = frozenset(
         DOCUMENT_UNAVAILABLE,
     }
 )
+
+# Checkpoint 14: Persistence & failure recovery errors
+PERSISTENCE_UNAVAILABLE = "PERSISTENCE_UNAVAILABLE"  # Supabase / database service is unreachable
+PERSISTENCE_ERROR = "PERSISTENCE_ERROR"  # Database query or storage operation failed
+JOB_RECOVERY_FAILED = "JOB_RECOVERY_FAILED"  # Recovery of an interrupted job could not be completed
+
+PERSISTENCE_ERROR_CODES: frozenset[str] = frozenset(
+    {
+        PERSISTENCE_UNAVAILABLE,
+        PERSISTENCE_ERROR,
+        JOB_RECOVERY_FAILED,
+    }
+)
+

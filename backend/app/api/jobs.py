@@ -32,20 +32,43 @@ router = APIRouter(prefix="/v1", tags=["jobs"])
 _STAGE = "jobs"
 _POLL_AFTER_SECONDS = 2
 
+from backend.app.core.config import settings
+from backend.app.repositories.supabase_job_repository import SupabaseJobRepository
+from backend.app.services.supabase_client import SupabaseClient
+
 # TEMPORARY per-checkpoint mapping: code -> (HTTP status, ApiError category).
 _ERROR_SPECS = {
     error_codes.REQUEST_VALIDATION_FAILED: (400, "request"),
     error_codes.DOCUMENT_UNAVAILABLE: (404, "request"),
     error_codes.JOB_NOT_FOUND: (404, "request"),
     error_codes.INVALID_JOB_STATE_TRANSITION: (409, "processing"),
+    error_codes.PERSISTENCE_UNAVAILABLE: (503, "system"),
+    error_codes.PERSISTENCE_ERROR: (500, "system"),
 }
 
-# One process-wide in-memory repository for C10; swapped for Supabase later.
-_job_repository = InMemoryJobRepository()
+# Process-wide repository instance; defaults to in-memory, uses Supabase when configured.
+_job_repository: JobRepository | None = None
 
 
 def get_job_repository() -> JobRepository:
+    global _job_repository
+    if _job_repository is None:
+        if settings.is_supabase_configured:
+            client = SupabaseClient(
+                url=settings.supabase_url or "",
+                key=settings.get_effective_supabase_key() or "",
+            )
+            _job_repository = SupabaseJobRepository(client)
+        else:
+            _job_repository = InMemoryJobRepository()
     return _job_repository
+
+
+def reset_job_repository(repo: JobRepository | None = None) -> None:
+    """Reset or override the process-wide job repository instance (useful for testing)."""
+    global _job_repository
+    _job_repository = repo
+
 
 
 def get_job_service(
